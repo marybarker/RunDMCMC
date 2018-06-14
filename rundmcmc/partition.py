@@ -11,6 +11,7 @@ class Partition:
     aggregations and calculations that we want to optimize.
 
     """
+<<<<<<< HEAD
 
     def __init__(self, graph=None, assignment=None, updaters=None,
                  parent=None, flips=None):
@@ -21,6 +22,18 @@ class Partition:
         :updaters: Dictionary of functions to track data about the partition.
                    The keys are stored as attributes on the partition class,
                    which the functions compute.
+=======
+    # TODO fix empty array issue
+    #edge = random.choice(partition.cut_edges)
+    edge = partition.graph.edge(partition.graph.vertex(0), partition.graph.vertex(8))
+    index = random.choice((0, 1))
+
+    if index == 1:
+        flipped_node, other_node = edge.source(), edge.target()
+    else:
+        flipped_node, other_node = edge.target(), edge.source()
+    flip = dict([(flipped_node, partition.assignment[other_node])])
+>>>>>>> ROUGH port to graph-tool
 
         """
         if parent:
@@ -48,7 +61,14 @@ class Partition:
         self.flips = None
         self.flows = None
 
+<<<<<<< HEAD
         self.max_edge_cuts = max_edge_cuts(self)
+=======
+    def __init__(self, graph, assignment, aggregate_fields=None, overwrite_stats=None):
+        self.graph = graph
+        self.assignment = assignment
+        self.cut_edges = [edge for edge in self.graph.edges() if self.crosses_parts(edge)]
+>>>>>>> ROUGH port to graph-tool
 
         self.parts = collections.defaultdict(set)
         for node, part in self.assignment.items():
@@ -58,6 +78,7 @@ class Partition:
         self.parent = parent
         self.flips = flips
 
+<<<<<<< HEAD
         self.assignment = {**parent.assignment, **flips}
 
         self.graph = parent.graph
@@ -93,6 +114,10 @@ class Partition:
         for key in self.updaters:
             if key not in self._cache:
                 self._cache[key] = self.updaters[key](self)
+=======
+    def crosses_parts(self, edge):
+        return self.assignment[edge.source()] != self.assignment[edge.target()]
+>>>>>>> ROUGH port to graph-tool
 
     def merge(self, flips):
         """
@@ -109,9 +134,32 @@ class Partition:
     def __getitem__(self, key):
         """Allows keying on a Partition instance.
 
+<<<<<<< HEAD
         :key: Property to access.
+=======
+    def initialize_statistic(self, field):
+        """
+        initialize_statistic computes the initial sum of the data column that
+        we want to sum up for each district at each step.
+        """
+        statistic = collections.defaultdict(int)
+        for node, part in self.assignment.items():
+            vprop = self.graph.vertex_properties[field]
+            statistic[part] += vprop[self.graph.vertex(node)]  # self.graph.vertex[node][field]
+        return statistic
+>>>>>>> ROUGH port to graph-tool
 
         """
+<<<<<<< HEAD
         if key not in self._cache:
             self._cache[key] = self.updaters[key](self)
         return self._cache[key]
+=======
+        new_statistic = dict()
+        for part, flow in flows_from_changes(self, changes).items():
+            vprop = self.graph.vertex_properties[field]
+            out_flow = sum(vprop[self.graph.vertex(node)] for node in flow['out'])
+            in_flow = sum(vprop[self.graph.vertex(node)] for node in flow['in'])
+            new_statistic[part] = old_statistic[part] - out_flow + in_flow
+        return {**old_statistic, **new_statistic}
+>>>>>>> ROUGH port to graph-tool

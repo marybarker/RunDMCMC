@@ -1,11 +1,15 @@
-import networkx
+from graph_tool.all import *
 import pandas as pd
 import geopandas as gp
+<<<<<<< HEAD
 import pysal
 import json
 from networkx.readwrite import json_graph
 from shapely.ops import cascaded_union
 import os.path
+=======
+import numpy as np
+>>>>>>> ROUGH port to graph-tool
 
 
 def get_list_of_data(filepath, col_name, geoid=None):
@@ -74,6 +78,7 @@ def add_boundary_perimeters(graph, neighbors, df):
             graph.node[node]['boundary_perim'] = float(
                 boundary.intersection(df.loc[node, "geometry"]).length)
 
+<<<<<<< HEAD
     return graph
 
 
@@ -94,6 +99,25 @@ def neighbors_with_shared_perimeters(neighbors, df):
             shared_perim = df.loc[shape, "geometry"].intersection(
                 df.loc[neighbor, "geometry"]).length
             vtds[shape][neighbor] = {'shared_perim': shared_perim}
+=======
+    '''
+    # Check to make sure there is a one-to-one between data and VTDs
+    for i, _ in enumerate(data_name):
+        if graph.num_vertices() != len(data[i]):
+            raise ValueError("Your column length doesn't match the number of nodes!")
+
+    # Adding data to the nodes
+        for i, _ in enumerate(data_name):
+            dtype = get_type(data[i][0])
+            vdata = graph.new_vertex_property(dtype)
+            if dtype == "string":
+                for j in range(len(geoid)):
+                    vgdata[graph.vertex(i)] = data[i][j]
+            else:
+                graph.vertex_properties[data_name[i]] = vdata
+                vdata.a = data[i]
+            #graph.vertices[x][j] = data[i][x]
+>>>>>>> ROUGH port to graph-tool
 
     return networkx.from_dict_of_dicts(vtds)
 
@@ -104,6 +128,7 @@ def construct_graph_from_df(df, id_column=None, cols_to_add=None):
     :df: Geopandas dataframe.
     :returns: NetworkX Graph.
 
+<<<<<<< HEAD
     """
     if id_column is not None:
         df = df.set_index(id_column)
@@ -118,6 +143,30 @@ def construct_graph_from_df(df, id_column=None, cols_to_add=None):
 
     if cols_to_add is not None:
         add_data_to_graph(df, graph, cols_to_add)
+=======
+    '''
+    graph = Graph()
+
+    vertices = graph.add_vertex(len(lists_of_neighbors))
+    # Creating the graph itself
+    for vtd, list_nbs in enumerate(lists_of_neighbors):
+        for d in list_nbs:
+            e = graph.add_edge(graph.vertex(vtd), graph.vertex(d))
+
+    shared_perim = graph.new_edge_property("double")
+    graph.edge_properties["shared_perim"] = shared_perim
+    # Add perims to edges
+    for i, nbs in enumerate(lists_of_neighbors):
+        for x, nb in enumerate(nbs):
+            e = graph.edge(graph.vertex(i), graph.vertex(nb))
+            graph.edge_properties["shared_perim"][e] = lists_of_perims[i][x]
+
+    # Add GEOID to each node(VTD)
+    vgeoid = graph.new_vertex_property("string")
+    graph.vertex_properties["GEOID"] = vgeoid
+    for i in range(len(geoid)):
+        vgeoid[graph.vertex(i)] = geoid[i]
+>>>>>>> ROUGH port to graph-tool
 
     return graph
 
@@ -204,5 +253,30 @@ def get_assignment_dict_from_graph(graph, assignment_attribute):
     :assignment_attribute: Attribute available on all nodes.
     :returns: Dictionary of {node_id: attribute} pairs.
 
+<<<<<<< HEAD
     """
     return networkx.get_node_attributes(graph, assignment_attribute)
+=======
+    :param graph: The graph object you are working on.
+    :param cd_identifier: How the congressional district is labeled on your graph.
+    :return: A dictionary.
+    '''
+    # creates a dictionary and iterates over the nodes to add node to CD.
+    nodes = {}
+    vpop = graph.vertex_properties[cd_identifier]
+    for i in range(graph.num_vertices()):
+        nodes[i] = vpop[graph.vertex(i)]
+    return nodes
+
+
+def get_type(data):
+    if type(data) == type(1) or type(data) == type(np.int64(2)):
+        return "int"
+    elif type(data) == type(4.1):
+        return "float"
+    elif type(data) == type(""):
+        return "string"
+    else:
+        print(type(data))
+        return "fail"
+>>>>>>> ROUGH port to graph-tool

@@ -49,12 +49,18 @@ import logging
 import random
 
 import networkx as nx
+<<<<<<< HEAD
 import networkx.algorithms.shortest_paths.weighted as nx_path
 from networkx import NetworkXNoPath
 
 from rundmcmc.updaters import CountySplit
 
 logger = logging.getLogger(__name__)
+=======
+import pandas as pd
+from graph_tool.all import *
+import numpy as np
+>>>>>>> ROUGH port to graph-tool
 
 
 class Validator:
@@ -368,6 +374,7 @@ def contiguous(partition):
 
     # Creates a dictionary where the key is the district and the value is
     # a list of VTDs that belong to that district
+<<<<<<< HEAD
     district_dict = {}
     # TODO
     for node in partition.graph.nodes:
@@ -383,6 +390,18 @@ def contiguous(partition):
         # TODO
         tmp = partition.graph.subgraph(district_dict[key])
         if nx.is_connected(tmp) is False:
+=======
+
+    _, dist_idxs = np.unique(partition.graph.vp.CD.a, return_index=True)
+    dists = partition.graph.vp.CD.a[dist_idxs]
+
+    for i in dists:
+        vfilt = partition.graph.new_vertex_property('bool')
+        vfilt = partition.graph.vp.CD.a == np.full(len(vfilt.a), i)
+        tmp = GraphView(partition.graph, vfilt)
+        _, hist = label_components(tmp)
+        if len(hist) != 1:
+>>>>>>> ROUGH port to graph-tool
             return False
 
     return True
