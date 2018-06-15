@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """
 Collection of constraint functions for the validation step in RunDMCMC.
 
@@ -57,8 +58,11 @@ from rundmcmc.updaters import CountySplit
 
 logger = logging.getLogger(__name__)
 =======
+=======
+>>>>>>> fix style and imports
 import pandas as pd
-from graph_tool.all import *
+from graph_tool import GraphView
+from graph_tool.topology import label_components
 import numpy as np
 >>>>>>> ROUGH port to graph-tool
 

@@ -1,4 +1,4 @@
-from graph_tool.all import *
+from graph_tool import Graph
 import pandas as pd
 import geopandas as gp
 <<<<<<< HEAD
@@ -108,19 +108,26 @@ def neighbors_with_shared_perimeters(neighbors, df):
 
     # Adding data to the nodes
         for i, _ in enumerate(data_name):
+            # get the graph-tool value type to create the property map for the data
             dtype = get_type(data[i][0])
             vdata = graph.new_vertex_property(dtype)
+
+            # can't vectorize assignment of nonscalar data types
             if dtype == "string":
-                for j in range(len(geoid)):
-                    vgdata[graph.vertex(i)] = data[i][j]
+                for j in range(len(data[i])):
+                    vdata[graph.vertex(i)] = data[i][j]
             else:
+                # assign data as a vector, very slick
                 graph.vertex_properties[data_name[i]] = vdata
                 vdata.a = data[i]
+<<<<<<< HEAD
             #graph.vertices[x][j] = data[i][x]
 >>>>>>> ROUGH port to graph-tool
 
     return networkx.from_dict_of_dicts(vtds)
 
+=======
+>>>>>>> fix style and imports
 
 def construct_graph_from_df(df, id_column=None, cols_to_add=None):
     """Construct initial graph from information about neighboring VTDs.
@@ -147,7 +154,7 @@ def construct_graph_from_df(df, id_column=None, cols_to_add=None):
     '''
     graph = Graph()
 
-    vertices = graph.add_vertex(len(lists_of_neighbors))
+    graph.add_vertex(len(lists_of_neighbors))
     # Creating the graph itself
     for vtd, list_nbs in enumerate(lists_of_neighbors):
         for d in list_nbs:
@@ -263,6 +270,7 @@ def get_assignment_dict_from_graph(graph, assignment_attribute):
     '''
     # creates a dictionary and iterates over the nodes to add node to CD.
     nodes = {}
+    # get the vertex property map of the identifier
     vpop = graph.vertex_properties[cd_identifier]
     for i in range(graph.num_vertices()):
         nodes[i] = vpop[graph.vertex(i)]
@@ -270,11 +278,11 @@ def get_assignment_dict_from_graph(graph, assignment_attribute):
 
 
 def get_type(data):
-    if type(data) == type(1) or type(data) == type(np.int64(2)):
+    if isinstance(data, int) or isinstance(data, np.int64):  # type(data) == type(np.int64(2)):
         return "int"
-    elif type(data) == type(4.1):
+    elif isinstance(data, float):
         return "float"
-    elif type(data) == type(""):
+    elif isinstance(data, str):
         return "string"
     else:
         print(type(data))
