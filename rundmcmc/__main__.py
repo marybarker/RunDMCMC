@@ -30,8 +30,6 @@ def main(args=None):
 =======
     return Partition(graph, assignment, updaters)
 
-import time
-
 
 def print_summary(partition, scores):
     print("")
@@ -64,11 +62,15 @@ if __name__ == "__main__":
 =======
     test_counties = ["007", "099", "205", "127"]
     for partition in chain:
-        # print_summary(partition, scores)
+        print_summary(partition, scores)
         for county in test_counties:
             info = partition["counties"][county]
+<<<<<<< HEAD
             # print("county {}: {} ({})".format(county, info.split, info.contains))
 >>>>>>> Begin working on a faster single-flip contiguity check
+=======
+            print("county {}: {} ({})".format(county, info.split, info.contains))
+>>>>>>> Revert "Begin working on a faster single-flip contiguity check"
 
 
 if __name__ == "__main__":
