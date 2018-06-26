@@ -421,12 +421,32 @@ def fast_connected(partition):
     """
     assignment = partition.assignment
 
+<<<<<<< HEAD
     # Inverts the assignment dictionary so that lists of VTDs are keyed
     # by their congressional districts.
     districts = collections.defaultdict(set)
 
     for vtd in assignment:
         districts[assignment[vtd]].add(vtd)
+=======
+    # Inverts the assignment dictionary so that lists of VTDs are keyed by their
+    # congressional districts.
+    """
+    districts = {}
+
+    for vtd in assignment:
+        district = assignment[vtd]
+        if districts.get(district, None) is None:
+            districts[district] = [vtd]
+        else:
+            districts[district] += [vtd]
+    """
+
+    # Zach Schutzman used this defaultdict/set configuration to speed things up.
+    districts = collections.defaultdict(set)
+    for vtd in chain.state.assignment:
+        districts[chain.state.assignment[vtd]].add(vtd)
+>>>>>>> Begin working on a faster single-flip contiguity check
 
     # Generates a subgraph for each district and perform a BFS on it
     # to check connectedness.

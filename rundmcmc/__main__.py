@@ -26,6 +26,18 @@ def main(args=None):
 <<<<<<< HEAD
     output_func(output, scores, output_type)
 
+<<<<<<< HEAD
+=======
+    return Partition(graph, assignment, updaters)
+
+import time
+
+
+def print_summary(partition, scores):
+    print("")
+    for name, score in scores.items():
+        print(f"{name}: {score(partition, 'PR_DV08%')}")
+>>>>>>> Begin working on a faster single-flip contiguity check
 
 if __name__ == "__main__":
     main(sys.argv)
@@ -39,6 +51,7 @@ if __name__ == "__main__":
     n = 2**15
     chain = MarkovChain(propose_random_flip, validator, accept, initial_partition, total_steps=n)
 
+<<<<<<< HEAD
     i = 0
     print("starting")
     start = time.time()
@@ -48,6 +61,14 @@ if __name__ == "__main__":
             print(i)
         i += 1
     print(time.time() - start)
+=======
+    test_counties = ["007", "099", "205", "127"]
+    for partition in chain:
+        # print_summary(partition, scores)
+        for county in test_counties:
+            info = partition["counties"][county]
+            # print("county {}: {} ({})".format(county, info.split, info.contains))
+>>>>>>> Begin working on a faster single-flip contiguity check
 
 
 if __name__ == "__main__":
