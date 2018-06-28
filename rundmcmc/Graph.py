@@ -195,6 +195,7 @@ class Graph:
             return np.asarray(self.graph.edges())
         else:
 <<<<<<< HEAD
+<<<<<<< HEAD
             return self.graph.get_edges()[:,1:]
 
 
@@ -203,6 +204,9 @@ class Graph:
             Returns a numpy array over the neighbors of node `node`. For whatever
 =======
             return self.graph.get_edges()[:, 1:]
+=======
+            return np.asarray(list(self.graph.get_edges()))
+>>>>>>> getting edges, still need to convert to geoid
 
     def neighbors(self, node):
         """
@@ -384,4 +388,8 @@ if __name__ == "__main__":
 >>>>>>> Both networkx and graph-tool now return an np array of GEOIDs when nodes method is called
 =======
     print(g.nodes())
+<<<<<<< HEAD
 >>>>>>> Fixed what I broke in Graph.py
+=======
+    print(g.edges())
+>>>>>>> getting edges, still need to convert to geoid
