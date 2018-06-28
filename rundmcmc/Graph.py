@@ -196,6 +196,7 @@ class Graph:
         else:
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             return self.graph.get_edges()[:,1:]
 
 
@@ -207,6 +208,20 @@ class Graph:
 =======
             return np.asarray(list(self.graph.get_edges()))
 >>>>>>> getting edges, still need to convert to geoid
+=======
+            # the first two columns are the edges
+            # connected and the last is the index
+            geoids = np.asarray(list(self.graph.vertex_properties["_graphml_vertex_id"]))
+
+            lookup = {}
+            for idx, geoid in enumerate(geoids):
+                lookup[idx] = geoid
+            edge_lists = []
+            arr = np.asarray(list(self.graph.get_edges()))
+            for i in range(len(arr)):
+                edge_lists.append([lookup.get(n, n) for n in arr[i]])
+            return np.asarray(edge_lists)
+>>>>>>> edges are working for graph-tool now
 
     def neighbors(self, node):
         """

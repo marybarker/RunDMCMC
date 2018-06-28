@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 import sys
 from rundmcmc.parse_config import read_basic_config
 =======
@@ -10,6 +11,17 @@ from rundmcmc.chain import MarkovChain
 import time
 >>>>>>> ROUGH port to graph-tool
 
+=======
+
+import json
+import geopandas as gp
+import networkx.readwrite
+
+import functools
+
+import matplotlib.pyplot as plt
+
+>>>>>>> edges are working for graph-tool now
 
 def main(args=None):
     if not args:
