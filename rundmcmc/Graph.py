@@ -54,7 +54,7 @@ class Graph:
         self._data_added = False
         self._xml_location = None
 
-        # Try to make a graph if `path` is provided.
+        # Try to make a graph if `path` is provided
         if path:
             self.make_graph(path, geoid_col)
 
@@ -69,7 +69,7 @@ class Graph:
 
 
     def make_graph(self, path, geoid_col=None):
-        """ 
+        """
             Loads a graph from the specified data source. Called automatically
             in __init__, but can also be used as a simple auxiliary function if
             somebody wants to initialize the graph in a more visible way.
@@ -107,7 +107,7 @@ class Graph:
             Returns None.
         """
         df = gp.read_file(path)
-        add_data_to_graph(df, self.graph, col_names, id_col) 
+        add_data_to_graph(df, self.graph, col_names, id_col)
 
 
     def convert(self):
@@ -133,29 +133,32 @@ class Graph:
             wouldn't it make sense to provide them with an option to not have to
             re-convert each time? I feel this is something to address.
         """
-        err = "Are you sure you want to convert to graph-tool? [y/N] "
 
+<<<<<<< HEAD
         # Check that the user actually wants to convert to graph-tool if they
         # haven't indicated otherwise already.
         if self.library != "graph-tool" and self.library != "networkx":
             answer = input(colored(err, "blue")).lower()
             if answer == "n" or answer == "no":
                 print(colored("Aborting.", "red"))
+=======
+        # Check that the user actually wants to convert to graph-tool.
+        if self.library != "graph-tool":
+
+            # Try to convert the graph to GraphML
+            try:
+                self._xml_location = os.getcwd() + "/graph.xml"
+                nx.write_graphml_xml(self.graph,(self._xml_location))
+                self.graph = load_graph(self._xml_location)
+                self._converted = True
+                self.library = "graph_tool"
+            except:
+                err = "Encountered an error during conversion. Aborting."
+                raise RuntimeError(err)
+>>>>>>> Both networkx and graph-tool now return an np array of GEOIDs when nodes method is called
                 return
 
-        # Try to convert the graph to GraphML
-        try:
-            self._xml_location = os.getcwd() + "/graph.xml"
-            nx.write_graphml_xml(self.graph,(self._xml_location))
-            self.graph = load_graph(self._xml_location)
-            self._converted = True
-            self.library = "graph_tool"
-        except:
-            err = "Encountered an error during conversion. Aborting."
-            raise RuntimeError(err)
-            return
 
-    
     def export_to_file(self, format="json"):
         """
             Exports a graph in the specified file format. We'll include support
@@ -180,7 +183,12 @@ class Graph:
         if self.library == "networkx":
             return np.asarray(self.graph.nodes())
         else:
-            return self.graph.get_vertices()
+            li = []
+
+            for i in range(len(self.graph.get_vertices())):
+                v = self.graph.vertex(i)
+                li.append(self.graph.vertex_properties["_graphml_vertex_id"][v])
+            return np.asarray(li)
 
 
     def edges(self):
@@ -206,7 +214,7 @@ class Graph:
         else:
             return self.graph.get_out_neighbors(node)
 
-    
+
     def get_node_attributes(self, node):
         """
             Returns a dict of each node's attributes.
@@ -222,7 +230,7 @@ class Graph:
             for prop in propertymap.keys():
                 vprop = propertymap[prop]
                 properties[prop] = vprop[self.graph.vertex(node)]
-            
+
             return properties
 
 
@@ -233,7 +241,12 @@ class Graph:
         """
         pass
 
+<<<<<<< HEAD
     
+=======
+
+
+>>>>>>> Both networkx and graph-tool now return an np array of GEOIDs when nodes method is called
     def subgraph(self, nodes):
         """
             Finds the subgraph containing all nodes in `nodes`. Returns the
@@ -255,7 +268,7 @@ class Graph:
         """
         pass
 
-    
+
     def to_dict_of_lists(self):
         """
             Returns the graph as a dictionary of lists.
@@ -273,9 +286,13 @@ class Graph:
 if __name__ == "__main__":
     g = Graph("./testData/MO_graph.json")
     g.convert()
+<<<<<<< HEAD
 
     start = time.time()
     for node in g.nodes():
         print(g.get_node_attributes(node))
     end = time.time()
     print("Operation took {} seconds".format(str(end - start)))
+=======
+    print(g.nodes())
+>>>>>>> Both networkx and graph-tool now return an np array of GEOIDs when nodes method is called

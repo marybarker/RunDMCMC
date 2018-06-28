@@ -6,11 +6,15 @@ import pysal
 import json
 from networkx.readwrite import json_graph
 from shapely.ops import cascaded_union
+<<<<<<< HEAD
 import os.path
 =======
 import numpy as np
 >>>>>>> ROUGH port to graph-tool
 
+=======
+import networkx
+>>>>>>> Both networkx and graph-tool now return an np array of GEOIDs when nodes method is called
 
 def get_list_of_data(filepath, col_name, geoid=None):
     """Pull a column data from a CSV file or any fiona-supported file.
