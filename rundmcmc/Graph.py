@@ -218,10 +218,15 @@ class Graph:
                 lookup[idx] = geoid
             edge_lists = []
             arr = np.asarray(list(self.graph.get_edges()))
+<<<<<<< HEAD
             for i in range(len(arr)):
                 edge_lists.append([lookup.get(n, n) for n in arr[i]])
             return np.asarray(edge_lists)
 >>>>>>> edges are working for graph-tool now
+=======
+            return np.vectorize(lookup.get)(arr)
+
+>>>>>>> Edges is faster and vectorized now
 
     def neighbors(self, node):
         """
@@ -404,7 +409,14 @@ if __name__ == "__main__":
 =======
     print(g.nodes())
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> Fixed what I broke in Graph.py
 =======
     print(g.edges())
 >>>>>>> getting edges, still need to convert to geoid
+=======
+    start = time.time()
+    print(g.edges())
+    end = time.time()
+    print(end - start)
+>>>>>>> Edges is faster and vectorized now
