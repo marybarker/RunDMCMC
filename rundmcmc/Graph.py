@@ -1,4 +1,3 @@
-
 # I know this is an abhorrent way to import things, but I promise that this is
 # the way the docs told me to do it.
 from graph_tool.all import *
@@ -22,6 +21,7 @@ class Graph:
         vertices and edges are faster with graph-tool, but NetworkX has the
         upper hand on getting node attributes and neighbors.
     """
+
     def __init__(self, path=None, geoid_col=None, graph_tool=False):
         """
             Main properties of the Graph instance.
@@ -165,6 +165,7 @@ class Graph:
         else:
             return np.asarray(list(self.graph.vertex_properties["_graphml_vertex_id"]))
 
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -185,6 +186,8 @@ class Graph:
 >>>>>>> Unindent some things, fix documentation.
 =======
 >>>>>>> More docs fixes.
+=======
+>>>>>>> More abstraction
     def edges(self):
         """
             Returns a numpy array over the edges of the graph. See
@@ -216,7 +219,6 @@ class Graph:
             lookup = {}
             for idx, geoid in enumerate(geoids):
                 lookup[idx] = geoid
-            edge_lists = []
             arr = np.asarray(list(self.graph.get_edges()))
 <<<<<<< HEAD
             for i in range(len(arr)):
@@ -226,8 +228,11 @@ class Graph:
 =======
             return np.vectorize(lookup.get)(arr)
 
+<<<<<<< HEAD
 >>>>>>> Edges is faster and vectorized now
 
+=======
+>>>>>>> More abstraction
     def neighbors(self, node):
         """
             Returns numpy array over the neighbors of node `node`. For whatever
@@ -242,12 +247,15 @@ class Graph:
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 >>>>>>> Unindent some things, fix documentation.
 =======
 
 >>>>>>> More docs fixes.
+=======
+>>>>>>> More abstraction
     def get_node_attributes(self, node):
         """
             Returns a dict of each node's attributes.
@@ -358,13 +366,24 @@ class Graph:
         """
             Checks that the set of nodes is connected.
         """
-        pass
+        if self.library == 'networkx':
+            return nx.is_connected(self.graph.subgraph(nodes))
+        else:
+            label = label_components(self.graph)[0]
+            sub = GraphView(self.graph, vfilt=label.a == nodes)
+            # need to keep thinking about this moving on for now
+            pass
 
     def subgraph(self, nodes):
         """
             Finds the subgraph containing all nodes in `nodes`.
         """
-        pass
+        if self.library == 'networkx':
+            return self.graph.subgraph(nodes)
+        else:
+            label = label_components(self.graph)[0]
+            return GraphView(self.graph, vfilt=label.a == nodes)
+
 
     def to_dict_of_dicts(self):
         """
@@ -394,6 +413,7 @@ class Graph:
 
 if __name__ == "__main__":
     g = Graph("./testData/MO_graph.json")
+<<<<<<< HEAD
     g.convert()
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -420,3 +440,8 @@ if __name__ == "__main__":
     end = time.time()
     print(end - start)
 >>>>>>> Edges is faster and vectorized now
+=======
+    # g.convert()
+    g.nodes()
+    print(g.connected())
+>>>>>>> More abstraction
