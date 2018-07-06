@@ -129,7 +129,8 @@ class Partition:
         return self.__class__(parent=self, flips=flips)
 
     def crosses_parts(self, edge):
-        return self.assignment[edge[0]] != self.assignment[edge[1]]
+        if type(edge) is not tuple:
+            return self.assignment[edge[0]] != self.assignment[edge[1]]
 
     def __getitem__(self, key):
         """Allows keying on a Partition instance.

@@ -381,7 +381,7 @@ def contiguous(partition):
 <<<<<<< HEAD
     district_dict = {}
     # TODO
-    for node in partition.graph.nodes:
+    for node in partition.graph.nodes():
         # TODO
         dist = proposed_assignment(node)
         if dist in district_dict:

@@ -88,20 +88,18 @@ if __name__ == "__main__":
 =======
 from rundmcmc.Graph import Graph
 
-from rundmcmc.make_graph import (construct_graph)
 from rundmcmc.partition import Partition
 from rundmcmc.updaters import (Tally, boundary_nodes, cut_edges,
                                cut_edges_by_part, exterior_boundaries,
                                perimeters)
 from rundmcmc.updaters import polsby_popper_updater as polsby_popper
 from rundmcmc.updaters import votes_updaters
+from rundmcmc.defaults import BasicChain
 
 def main():
     G = Graph("./testData/PA_graph_with_data.json")
-    graph = construct_graph("./testData/PA_graph_with_data.json")
     assignment = dict(zip(G.nodes(), G.node_properties('CD')))
-    print(assignment)
-
+    G.convert()
     updaters = {
         **votes_updaters(['VoteA', 'VoteB']),
         'population': Tally('POP100', alias='population'),
@@ -114,8 +112,14 @@ def main():
         'cut_edges_by_part': cut_edges_by_part
     }
 
+<<<<<<< HEAD
     Partition(graph, assignment, updaters)
 >>>>>>> Not working, but close.  Progress so far
+=======
+    p = Partition(G, assignment, updaters)
+
+    chain = BasicChain(p, 100)
+>>>>>>> Working abstraction
 
 if __name__ == "__main__":
     import sys
