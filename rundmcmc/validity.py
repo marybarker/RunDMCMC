@@ -391,6 +391,7 @@ def contiguous(partition):
 
     # Checks if the subgraph of all districts are connected(contiguous)
     for key in district_dict:
+<<<<<<< HEAD
         # TODO
         tmp = partition.graph.subgraph(district_dict[key])
         if nx.is_connected(tmp) is False:
@@ -408,6 +409,15 @@ def contiguous(partition):
 >>>>>>> ROUGH port to graph-tool
             return False
 
+=======
+        if partition.graph._converted is False:
+            tmp = partition.graph.subgraph(district_dict[key])
+            if nx.is_connected(tmp) is False:
+                return False
+        else:
+            tmp = partition.graph.subgraph(district_dict[key])
+            print(tmp)
+>>>>>>> Last thing to implement is a BFS to check the subgraph connectedness
     return True
 
 
