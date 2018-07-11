@@ -119,11 +119,14 @@ def main():
 =======
     p = Partition(G, assignment, updaters)
     G.convert()
+<<<<<<< HEAD
 
 <<<<<<< HEAD
     chain = BasicChain(p, 100)
 >>>>>>> Working abstraction
 =======
+=======
+>>>>>>> Bug where the number of nodes in a subgraph is correct, but the connectedness is not
     chain = BasicChain(p, 30)
 >>>>>>> Last thing to implement is a BFS to check the subgraph connectedness
 

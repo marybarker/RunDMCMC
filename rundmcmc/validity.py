@@ -53,8 +53,21 @@ import networkx as nx
 <<<<<<< HEAD
 import networkx.algorithms.shortest_paths.weighted as nx_path
 from networkx import NetworkXNoPath
-
 from rundmcmc.updaters import CountySplit
+from graph_tool.all import *
+
+
+class VisitorExample(BFSVisitor):
+
+    def __init__(self, name):
+        self.name = name
+        self.counter = 0
+
+    def discover_vertex(self, u):
+        self.counter += 1
+
+    def __len__(self):
+        return self.counter
 
 logger = logging.getLogger(__name__)
 =======
@@ -367,9 +380,6 @@ def contiguous(partition):
     :returns: True if contiguous, False otherwise.
 
     """
-    flips = partition.flips
-    if not flips:
-        flips = dict()
 
     def proposed_assignment(node):
         """Return the proposed assignment of the given node."""
@@ -412,12 +422,23 @@ def contiguous(partition):
 =======
         if partition.graph._converted is False:
             tmp = partition.graph.subgraph(district_dict[key])
+            print(len(tmp))
             if nx.is_connected(tmp) is False:
                 return False
         else:
             tmp = partition.graph.subgraph(district_dict[key])
+<<<<<<< HEAD
             print(tmp)
 >>>>>>> Last thing to implement is a BFS to check the subgraph connectedness
+=======
+            name = tmp.vp['CD']
+            visitor = VisitorExample(name)
+            bfs_search(tmp, tmp.vertex(next(tmp.vertices())), visitor)
+            print(len(visitor), len(tmp.get_vertices()))
+            #if len(tmp.get_vertices()) != len(visitor):
+                #return False
+
+>>>>>>> Bug where the number of nodes in a subgraph is correct, but the connectedness is not
     return True
 
 
