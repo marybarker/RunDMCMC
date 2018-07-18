@@ -45,7 +45,7 @@ def propose_random_flip_metagraph(partition):
     # checks for a frozen nodes field and self loops if the value has
     # been set to 1
     flipped_node = list(flip.keys())[0]
-    node_attrs = partition.graph.nodes[flipped_node]
+    node_attrs = partition.graph.node(flipped_node)
     if "Frozen" in node_attrs and node_attrs["Frozen"]:
         return dict()
 
@@ -282,4 +282,4 @@ def max_edge_cuts(partition):
     # TODO need number of frozen edges of graph
     numFrozen = 0
     numDists = len(set(partition.assignment.values()))
-    return 2 * (2 * len(partition.graph.nodes) + (numDists - numFrozen) - 6)
+    return 2 * (2 * len(partition.graph.nodes()) + (numDists - numFrozen) - 6)
