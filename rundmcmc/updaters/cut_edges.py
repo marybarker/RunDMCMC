@@ -14,7 +14,7 @@ def put_edges_into_parts(edges, assignment):
 def new_cuts(partition):
     """The edges that were not cut, but now are"""
     return {tuple(sorted((node, neighbor))) for node in partition.flips
-            for neighbor in partition.graph[node]
+            for neighbor in partition.graph.neighbors(node)
             if partition.crosses_parts((node, neighbor))}
 
 
@@ -70,7 +70,7 @@ def on_edge_flow(initializer, alias):
 
 
 def initialize_cut_edges(partition):
-    edges = {tuple(sorted(edge)) for edge in partition.graph.edges
+    edges = {tuple(sorted(edge)) for edge in partition.graph.edges()
              if partition.crosses_parts(edge)}
     return put_edges_into_parts(edges, partition.assignment)
 
@@ -84,7 +84,7 @@ def cut_edges(partition):
     parent = partition.parent
 
     if not parent:
-        return {edge for edge in partition.graph.edges
+        return {tuple(edge) for edge in partition.graph.edges()
                 if partition.crosses_parts(edge)}
     # Edges that weren't cut, but now are cut
     # We sort the tuples to make sure we don't accidentally end

@@ -27,24 +27,37 @@ class Graph:
                 :library:   String denoting which graph implementation library
                             is being used.
                 :graph:     Graph object.
+                :path:      Path to the source file of the graph.
         """
         self.library = "graph_tool" if graph_tool else "networkx"
         self.graph = None
-        self.nxgraph = construct_graph(path)
+        self.path = None
+        self.id = geoid_col
 
         """
             Internal properties:
-                :_converted:    Has this graph been converted to graph-tool?
-                :_data_added:   Has data been added to this graph?
-                :_xml_location: GraphML filepath.
+                :_converted:               Has this graph been converted to graph-tool?
+                :_data_added:              Has data been added to this graph?
+                :_xml_location:            GraphML filepath.
+                :_nodelookup_geoid_to_idx: Netowrkx node ID to graph-tool node index lookup
+                :_nodelookup_idx_to_geoid: Graph-tool node index to netowrkx node ID lookup
+                :_edgelookup:
+                :_vertexdata:
+                :_edgedata:
         """
         self._converted = False
         self._data_added = False
         self._xml_location = None
+        self._nodelookup_geoid_to_idx = None
+        self._nodelookup_idx_to_geoid = None
+        self._edgelookup = None
+        self._vertexdata = None
+        self._edgedata = None
 
         # Try to make a graph if `path` is provided.
         if path:
             self.make_graph(path, geoid_col)
+
 
     def __del__(self):
         """
@@ -53,6 +66,7 @@ class Graph:
         """
         if self._xml_location:
             os.remove(self._xml_location)
+
 
     def make_graph(self, path, geoid_col=None):
         """
@@ -74,7 +88,7 @@ class Graph:
         # Determines whether to read in from shapefiles or geojson.
         if extension == ".shp":
             df = gp.read_file(path)
-            self.graph = construct_graph(df, geoid_col)
+            self.graph = construct_graph(df, geoid_col, data_source_type='geo_data_frame', data_cols=['CD', 'ALAND'])
         elif extension == ".json":
             # Prepping for the file-read
             adjacency = None
@@ -82,13 +96,21 @@ class Graph:
                 adjacency = json.load(f)
                 self.graph = nx.readwrite.json_graph.adjacency_graph(adjacency)
 
+        # Generate a lookup table, assuming the user is going to convert to
+        # graph-tool.
+
+
     def add_data(self, path=None, col_names=None, id_col=None):
         """
             Shoves data (from the dataframe) into the graph. Uses Preston's
             add_data_to_graph.
         """
         df = gp.read_file(path)
-        add_data_to_graph(df, self.graph, col_names, id_col)
+        if(id_col):
+            df = df.set_index(id_col)
+            df[id_col] = [x for x in df.index]
+        add_data_to_graph(df, self.graph, col_names)
+
 
     def convert(self):
         """
@@ -114,17 +136,6 @@ class Graph:
             re-convert each time? I feel this is something to address.
         """
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-        # Check that the user actually wants to convert to graph-tool if they
-        # haven't indicated otherwise already.
-        if self.library != "graph-tool" and self.library != "networkx":
-            answer = input(colored(err, "blue")).lower()
-            if answer == "n" or answer == "no":
-                print(colored("Aborting.", "red"))
-=======
-=======
->>>>>>> Fixed what I broke in Graph.py
         # Check that the user actually wants to convert to graph-tool.
         if self.library != "graph-tool":
             # Try to convert the graph to GraphML
@@ -134,15 +145,25 @@ class Graph:
                 self.graph = load_graph(self._xml_location)
                 self._converted = True
                 self.library = "graph_tool"
+                self._nodelookup_geoid_to_idx = {self.graph.vertex_properties[self.id][x]: x for x in range(len(list(self.graph.vertices())))}
+                self._nodelookup_idx_to_geoid = {x: self.graph.vertex_properties[self.id][x] for x in range(len(list(self.graph.vertices())))}
+                self._edgelookup = {(self._nodelookup_idx_to_geoid[tuple(e)[0]], self._nodelookup_idx_to_geoid[tuple(e)[1]]): i for i, e in enumerate(list(self.graph.edges()))}
+                self._edgelookup.update({(self._nodelookup_idx_to_geoid[tuple(e)[1]], self._nodelookup_idx_to_geoid[tuple(e)[0]]): i for i, e in enumerate(list(self.graph.edges()))})
+                #print(self._edgelookup)
+                self._vertexdata = {
+                    x: list(y) for x, y in list(self.graph.vertex_properties.items())
+                }
+                self._edgedata = {
+                    x: list(y) for x, y in list(self.graph.edge_properties.items())
+                }
+                self._num_nodes = len(list(self._nodelookup_geoid_to_idx))
+                self._nodelist = np.asarray(list(self.graph.vertex_properties["_graphml_vertex_id"]))
                 return self.graph
             except:
                 err = "Encountered an error during conversion. Aborting."
                 raise RuntimeError(err)
-<<<<<<< HEAD
->>>>>>> Both networkx and graph-tool now return an np array of GEOIDs when nodes method is called
-=======
->>>>>>> Fixed what I broke in Graph.py
                 return
+
 
     def export_to_file(self, format="json"):
         """
@@ -156,61 +177,42 @@ class Graph:
         """
         pass
 
+
     def node(self, node_id, attribute):
         if self.library == "networkx":
             return self.graph.nodes[node_id][attribute]
         else:
-            print(self.graph.vertex_properties[attribute])
-            return list(self.graph.vertex_properties[attribute])[int(node_id)]
+            gt_node_id = self._nodelookup_geoid_to_idx[node_id]
+            #return list(self.graph.vertex_properties[attribute])[gt_node_id]
+            return self._vertexdata[attribute][gt_node_id]
 
-    def nodes(self):
+
+    def nodes(self, data=False):
         """
             Returns a numpy array over the nodes of the graph. Finding neighbors
             in graph-tool is significantly faster.
         """
         if self.library == "networkx":
-            return iter(np.asarray(self.graph.nodes()))
+            return iter(np.asarray(self.graph.nodes(data=data)))
         else:
-            return np.asarray(list(self.graph.vertex_properties["_graphml_vertex_id"]))
+            return self._nodelist
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-        def edges(self):
-            """
-                Returns a numpy array over the edges of the graph. See
-                `Graph.nodes()` for more info on why the graph-tool call to get_edges
-                is different.
-            """
-            if self.library == "networkx":
-                return np.asarray(self.graph.edges())
-            else:
-                return self.graph.get_edges()[:, 1:]
-
-<<<<<<< HEAD
-=======
-
->>>>>>> Unindent some things, fix documentation.
-=======
->>>>>>> More docs fixes.
-=======
->>>>>>> More abstraction
-=======
     def node_properties(self, prop):
         if self.library == "networkx":
-            return [self.nxgraph.node[x][prop] for x in self.nxgraph.nodes()]
+            return [self.graph.node[x][prop] for x in self.graph.nodes()]
         else:
-            pass
+            return self._vertexdata[prop]
+
 
     def edge(self, edge_id, attribute):
         if self.library == "networkx":
             return self.graph.edges[edge_id][attribute]
         else:
-            pass
+            #print(edge_id)
+            gt_edge_id = self._edgelookup[edge_id]
+            return self._edgedata[attribute][gt_edge_id]
 
->>>>>>> Not working, but close.  Progress so far
+
     def edges(self):
         """
             Returns a numpy array over the edges of the graph. See
@@ -220,21 +222,6 @@ class Graph:
         if self.library == "networkx":
             return np.asarray(self.graph.edges())
         else:
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-            return self.graph.get_edges()[:,1:]
-
-
-    def neighbors(self, node):
-        """
-            Returns a numpy array over the neighbors of node `node`. For whatever
-=======
-            return self.graph.get_edges()[:, 1:]
-=======
-            return np.asarray(list(self.graph.get_edges()))
->>>>>>> getting edges, still need to convert to geoid
-=======
             # the first two columns are the edges
             # connected and the last is the index
             geoids = np.asarray(list(self.graph.vertex_properties["_graphml_vertex_id"]))
@@ -243,42 +230,18 @@ class Graph:
             for idx, geoid in enumerate(geoids):
                 lookup[idx] = geoid
             arr = np.asarray(list(self.graph.get_edges()))
-<<<<<<< HEAD
-            for i in range(len(arr)):
-                edge_lists.append([lookup.get(n, n) for n in arr[i]])
-            return np.asarray(edge_lists)
->>>>>>> edges are working for graph-tool now
-=======
-            return np.vectorize(lookup.get)(arr)
+            return np.vectorize(lookup.get)(arr[:, :2])
 
-<<<<<<< HEAD
->>>>>>> Edges is faster and vectorized now
 
-=======
->>>>>>> More abstraction
     def neighbors(self, node):
-        """
-            Returns numpy array over the neighbors of node `node`. For whatever
->>>>>>> Unindent some things, fix documentation.
-            reason, graph-tool is worse than NetworkX at this call, but they're
-            still close.
-        """
         if self.library == "networkx":
             return np.asarray(list(nx.all_neighbors(self.graph, node)))
         else:
-            return self.graph.get_out_neighbors(node)
+            nodeidx = self._nodelookup_geoid_to_idx[node]
+            return map(self._nodelookup_idx_to_geoid.get, self.graph.vertex(nodeidx).all_neighbors())
+            #return [self._nodelookup_idx_to_geoid[x] for x in , self.graph.vertex(nodeidx).all_neighbors())
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 
-=======
->>>>>>> Unindent some things, fix documentation.
-=======
-
->>>>>>> More docs fixes.
-=======
->>>>>>> More abstraction
     def get_node_attributes(self, node):
         """
             Returns a dict of each node's attributes.
@@ -297,94 +260,7 @@ class Graph:
 
             return properties
 
-<<<<<<< HEAD
 
-    def connected(self, nodes):
-        """
-            Checks that the set of nodes is connected. Returns True or False
-            based on the connectivity of the graph.
-        """
-        pass
-
-<<<<<<< HEAD
-    
-=======
-
-
->>>>>>> Both networkx and graph-tool now return an np array of GEOIDs when nodes method is called
-    def subgraph(self, nodes):
-        """
-            Finds the subgraph containing all nodes in `nodes`. Returns the
-            subgraph as an adjacency matrix.
-        """
-        pass
-=======
-        def neighbors(self, node):
-            """
-                Returns numpy array over the neighbors of node `node`. For whatever
-                reason, graph-tool is worse than NetworkX at this call, but they're
-                still close.
-            """
-            if self.library == "networkx":
-                return np.asarray(list(nx.all_neighbors(self.graph, node)))
-            else:
-                return self.graph.get_out_neighbors(node)
->>>>>>> Fixed what I broke in Graph.py
-
-        def get_node_attributes(self, node):
-            """
-                Returns a dict of each node's attributes.
-            """
-            if self.library == "networkx":
-                return self.graph.node[node]
-            else:
-                # Create an empty properties dictionary and get the PropertyMap
-                properties = {}
-                propertymap = self.graph.vertex_properties
-
-                # Iterate over each key in the PropertyMap, storing values on the way
-                for prop in propertymap.keys():
-                    vprop = propertymap[prop]
-                    properties[prop] = vprop[self.graph.vertex(node)]
-
-                return properties
-
-        def connected(self, nodes):
-            """
-                Checks that the set of nodes is connected.
-            """
-            pass
-
-        def subgraph(self, nodes):
-            """
-                Finds the subgraph containing all nodes in `nodes`.
-            """
-            pass
-
-        def to_dict_of_dicts(self):
-            """
-                Returns the graph as a dictionary of dictionaries.
-            """
-            pass
-
-        def from_dict_of_dicts(self):
-            """
-                Loads in the graph as a dictionary of dictionaries.
-            """
-            pass
-
-        def to_dict_of_lists(self):
-            """
-                Returns the graph as a dictionary of lists.
-            """
-            pass
-
-        def from_dict_of_lists(self):
-            """
-                Loads in the graph as a dictionary of lists.
-            """
-            pass
-=======
     def connected(self, nodes):
         """
             Checks that the set of nodes is connected.
@@ -397,20 +273,22 @@ class Graph:
             # need to keep thinking about this moving on for now
             pass
 
+
     def subgraph(self, nodes):
         """
             Finds the subgraph containing all nodes in `nodes`.
         """
         if self.library == 'networkx':
-            #print(len(self.graph.subgraph(nodes)))
             return self.graph.subgraph(nodes)
         else:
-            vfilt = self.graph.new_vertex_property('bool')
-            for el in nodes:
-                vfilt[el] = True
-            return GraphView(self.graph,  vfilt)
+            vfilt = np.zeros(self._num_nodes, dtype=bool)
+            nodes = map(self._nodelookup_geoid_to_idx.get, nodes)
+            for x in nodes:
+                vfilt[x] = True
+            return GraphView(self.graph, vfilt=vfilt)
 
-    def to_dict_of_dicts(self):
+
+    def to_dict_of_dicts(self, part=None):
         """
             Returns the graph as a dictionary of dictionaries.
         """
@@ -422,51 +300,34 @@ class Graph:
         """
         pass
 
-    def to_dict_of_lists(self):
+    def to_dict_of_lists(self, nodelist=None):
         """
             Returns the graph as a dictionary of lists.
         """
-        pass
+        if self.library == 'networkx':
+            return nx.to_dict_of_lists(self.graph, nodelist=nodelist)
+        else:
+            if nodelist is None:
+                nodelist = list(range(self._num_nodes))
+            vfilt = np.zeros(self._num_nodes, dtype=bool)
+            nodes = map(self._nodelookup_geoid_to_idx.get, nodelist)
+            for x in nodes:
+                vfilt[x] = True
+
+            d = {}
+            for n in nodelist:
+                d[n] = [nbr for nbr in self.neighbors(n) if nbr in nodelist]
+            return d
 
     def from_dict_of_lists(self):
         """
             Loads in the graph as a dictionary of lists.
         """
         pass
->>>>>>> Unindent some things, fix documentation.
 
 
 if __name__ == "__main__":
     g = Graph("./testData/MO_graph.json")
-<<<<<<< HEAD
-    g.convert()
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-    start = time.time()
-    for node in g.nodes():
-        print(g.get_node_attributes(node))
-    end = time.time()
-    print("Operation took {} seconds".format(str(end - start)))
-=======
-    print(g.nodes())
->>>>>>> Both networkx and graph-tool now return an np array of GEOIDs when nodes method is called
-=======
-    print(g.nodes())
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> Fixed what I broke in Graph.py
-=======
-    print(g.edges())
->>>>>>> getting edges, still need to convert to geoid
-=======
-    start = time.time()
-    print(g.edges())
-    end = time.time()
-    print(end - start)
->>>>>>> Edges is faster and vectorized now
-=======
     # g.convert()
     g.nodes()
-    print(g.connected())
->>>>>>> More abstraction
+    #print(g.connected())

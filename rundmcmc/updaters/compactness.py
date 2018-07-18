@@ -17,7 +17,7 @@ def polsby_popper(partition):
 def boundary_nodes(partition, alias='boundary_nodes'):
     if partition.parent:
         return partition.parent[alias]
-    return {node for node in partition.graph.nodes if partition.graph.nodes[node]['boundary_node']}
+    return {node for node in partition.graph.nodes() if partition.graph.node(node, 'boundary_node')}
 
 
 def initialize_exterior_boundaries_as_a_set(partition):
@@ -35,7 +35,7 @@ def exterior_boundaries_as_a_set(partition, previous, inflow, outflow):
 
 def initialize_exterior_boundaries(partition):
     graph_boundary = partition['boundary_nodes']
-    return {part: sum(partition.graph.nodes[node]['boundary_perim']
+    return {part: sum(partition.graph.node(node, 'boundary_perim')
                       for node in partition.parts[part] & graph_boundary)
                       for part in partition.parts}
 
@@ -43,23 +43,23 @@ def initialize_exterior_boundaries(partition):
 @on_flow(initialize_exterior_boundaries, alias='exterior_boundaries')
 def exterior_boundaries(partition, previous, inflow, outflow):
     graph_boundary = partition['boundary_nodes']
-    added_perimeter = sum(partition.graph.nodes[node]['boundary_perim']
+    added_perimeter = sum(partition.graph.node(node, 'boundary_perim')
                           for node in inflow & graph_boundary)
-    removed_perimeter = sum(partition.graph.nodes[node]['boundary_perim']
+    removed_perimeter = sum(partition.graph.node(node, 'boundary_perim')
                             for node in outflow & graph_boundary)
     return previous + added_perimeter - removed_perimeter
 
 
 def initialize_interior_boundaries(partition):
-    return {part: sum(partition.graph.edges[edge]['shared_perim']
+    return {part: sum(partition.graph.edge(edge, 'shared_perim')
                       for edge in partition['cut_edges_by_part'][part])
             for part in partition.parts}
 
 
 @on_edge_flow(initialize_interior_boundaries, alias='interior_boundaries')
 def interior_boundaries(partition, previous, new_edges, old_edges):
-    added_perimeter = sum(partition.graph.edges[edge]['shared_perim'] for edge in new_edges)
-    removed_perimeter = sum(partition.graph.edges[edge]['shared_perim'] for edge in old_edges)
+    added_perimeter = sum(partition.graph.edge(edge, 'shared_perim') for edge in new_edges)
+    removed_perimeter = sum(partition.graph.edge(edge, 'shared_perim') for edge in old_edges)
     return previous + added_perimeter - removed_perimeter
 
 

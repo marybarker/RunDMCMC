@@ -103,11 +103,15 @@ class BasicChain(MarkovChain):
             raise ValueError('BasicChain needs the Partition to have a population updater.')
 
         population_constraint = within_percent_of_ideal_population(initial_state, 0.01)
+        print("FINISHED POP")
 
         compactness_limit = L1_reciprocal_polsby_popper(initial_state)
+        print("FINISHED LIMIT")
         compactness_constraint = UpperBound(L1_reciprocal_polsby_popper, compactness_limit)
+        print("FINISHED COMPACT")
 
         validator = Validator(default_constraints + [population_constraint, compactness_constraint])
+        print("FINISHED VALID")
 
         super().__init__(propose_random_flip, validator, always_accept, initial_state,
                          total_steps=total_steps)

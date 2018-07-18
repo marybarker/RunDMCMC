@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 """
 Collection of constraint functions for the validation step in RunDMCMC.
 
@@ -50,11 +49,14 @@ import logging
 import random
 
 import networkx as nx
-<<<<<<< HEAD
 import networkx.algorithms.shortest_paths.weighted as nx_path
 from networkx import NetworkXNoPath
+
 from rundmcmc.updaters import CountySplit
+
+import pandas as pd
 from graph_tool.all import *
+import numpy as np
 
 
 class VisitorExample(BFSVisitor):
@@ -68,16 +70,6 @@ class VisitorExample(BFSVisitor):
 
     def __len__(self):
         return self.counter
-
-logger = logging.getLogger(__name__)
-=======
-=======
->>>>>>> fix style and imports
-import pandas as pd
-from graph_tool import GraphView
-from graph_tool.topology import label_components
-import numpy as np
->>>>>>> ROUGH port to graph-tool
 
 
 class Validator:
@@ -380,6 +372,9 @@ def contiguous(partition):
     :returns: True if contiguous, False otherwise.
 
     """
+    flips = partition.flips
+    if not flips:
+        flips = dict()
 
     def proposed_assignment(node):
         """Return the proposed assignment of the given node."""
@@ -388,10 +383,9 @@ def contiguous(partition):
 
     # Creates a dictionary where the key is the district and the value is
     # a list of VTDs that belong to that district
-<<<<<<< HEAD
     district_dict = {}
     # TODO
-    for node in partition.graph.nodes():
+    for node in partition.graph.nodes:
         # TODO
         dist = proposed_assignment(node)
         if dist in district_dict:
@@ -401,44 +395,18 @@ def contiguous(partition):
 
     # Checks if the subgraph of all districts are connected(contiguous)
     for key in district_dict:
-<<<<<<< HEAD
         # TODO
-        tmp = partition.graph.subgraph(district_dict[key])
-        if nx.is_connected(tmp) is False:
-=======
-
-    _, dist_idxs = np.unique(partition.graph.vp.CD.a, return_index=True)
-    dists = partition.graph.vp.CD.a[dist_idxs]
-
-    for i in dists:
-        vfilt = partition.graph.new_vertex_property('bool')
-        vfilt = partition.graph.vp.CD.a == np.full(len(vfilt.a), i)
-        tmp = GraphView(partition.graph, vfilt)
-        _, hist = label_components(tmp)
-        if len(hist) != 1:
->>>>>>> ROUGH port to graph-tool
-            return False
-
-=======
         if partition.graph._converted is False:
             tmp = partition.graph.subgraph(district_dict[key])
-            print(len(tmp))
             if nx.is_connected(tmp) is False:
                 return False
         else:
             tmp = partition.graph.subgraph(district_dict[key])
-<<<<<<< HEAD
-            print(tmp)
->>>>>>> Last thing to implement is a BFS to check the subgraph connectedness
-=======
-            name = tmp.vp['CD']
-            visitor = VisitorExample(name)
+            visitor = VisitorExample(key)
             bfs_search(tmp, tmp.vertex(next(tmp.vertices())), visitor)
-            print(len(visitor), len(tmp.get_vertices()))
-            #if len(tmp.get_vertices()) != len(visitor):
-                #return False
+            if visitor.counter != len(district_dict[key]):
+                return False
 
->>>>>>> Bug where the number of nodes in a subgraph is correct, but the connectedness is not
     return True
 
 
@@ -452,40 +420,12 @@ def fast_connected(partition):
     """
     assignment = partition.assignment
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     # Inverts the assignment dictionary so that lists of VTDs are keyed
     # by their congressional districts.
     districts = collections.defaultdict(set)
 
     for vtd in assignment:
         districts[assignment[vtd]].add(vtd)
-=======
-    # Inverts the assignment dictionary so that lists of VTDs are keyed by their
-    # congressional districts.
-    """
-=======
-    # Inverts the assignment dictionary so that lists of VTDs are keyed
-    # by their congressional districts.
->>>>>>> Revert "Begin working on a faster single-flip contiguity check"
-    districts = {}
-
-    for vtd in assignment:
-        district = assignment[vtd]
-        if districts.get(district, None) is None:
-            districts[district] = [vtd]
-        else:
-            districts[district] += [vtd]
-<<<<<<< HEAD
-    """
-
-    # Zach Schutzman used this defaultdict/set configuration to speed things up.
-    districts = collections.defaultdict(set)
-    for vtd in chain.state.assignment:
-        districts[chain.state.assignment[vtd]].add(vtd)
->>>>>>> Begin working on a faster single-flip contiguity check
-=======
->>>>>>> Revert "Begin working on a faster single-flip contiguity check"
 
     # Generates a subgraph for each district and perform a BFS on it
     # to check connectedness.
@@ -556,6 +496,45 @@ def _bfs(graph):
                 q += [neighbor]
 
     return total_vertices == len(visited)
+
+
+def proposed_changes_still_contiguous(partition):
+    """
+        Checks whether the districts that are altered by a proposed change
+        (stored in partition.flips) remain contiguous under said changes.
+
+        :parition: Current :class:`.Partition` object.
+
+        :returns: True if changed districts are contiguous, False otherwise.
+    """
+
+    # Check whether this is the initial partition (parent=None)
+    # or one with proposed changes (parent != None).
+    districts_of_interest = set(partition.assignment.values())
+    if partition.parent:
+        districts_of_interest = set(partition.flips.values())
+
+    # Inverts the assignment dictionary so that lists of VTDs are keyed
+    # by their congressional districts.
+    assignment = partition.assignment
+    districts = collections.defaultdict(set)
+    for vtd in assignment:
+        districts[assignment[vtd]].add(vtd)
+
+    for key in districts_of_interest:
+        if partition.graph._converted is False:
+            tmp = partition.graph.subgraph(districts[key])
+            if nx.is_connected(tmp) is False:
+                return False
+        else:
+            tmp = partition.graph.subgraph(districts[key])
+            name = key
+            visitor = VisitorExample(name)
+            bfs_search(tmp, tmp.vertex(next(tmp.vertices())), visitor)
+            if visitor.counter != len(districts[key]):
+                return False
+
+    return True
 
 
 def districts_within_tolerance(partition, attribute_name="population", percentage=0.1):
