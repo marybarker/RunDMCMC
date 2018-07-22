@@ -512,7 +512,11 @@ def proposed_changes_still_contiguous(partition):
     # or one with proposed changes (parent != None).
     districts_of_interest = set(partition.assignment.values())
     if partition.parent:
-        districts_of_interest = set(partition.flips.values())
+        if partition.flips.keys is not None:
+            districts_of_interest = set(partition.flips.values()).union( 
+                    set(map(partition.parent.assignment.get, partition.flips) ))
+        else:
+            districts_of_interest = []
 
     # Inverts the assignment dictionary so that lists of VTDs are keyed
     # by their congressional districts.
