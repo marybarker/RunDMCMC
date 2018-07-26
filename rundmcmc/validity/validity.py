@@ -154,74 +154,6 @@ def single_flip_contiguous(partition):
     return True
 
 
-def contiguous(partition):
-    """Check if the assignment blocks of a partition are connected.
-
-    :parition: :class:`rundmcmc.partition.Partition` instance.
-    :flips: Dictionary of proposed flips, with `(nodeid: new_assignment)`
-            pairs. If `flips` is `None`, then fallback :func:`.contiguous`.
-
-    :returns: True if contiguous, False otherwise.
-
-    """
-    flips = partition.flips
-    if not flips:
-        flips = dict()
-
-    def proposed_assignment(node):
-        """Return the proposed assignment of the given node."""
-        return partition.assignment[node]
-    # TODO
-
-    # Creates a dictionary where the key is the district and the value is
-    # a list of VTDs that belong to that district
-    district_dict = {}
-    # TODO
-    for node in partition.graph.nodes:
-        # TODO
-        dist = proposed_assignment(node)
-        if dist in district_dict:
-            district_dict[dist].append(node)
-        else:
-            district_dict[dist] = [node]
-
-    # Checks if the subgraph of all districts are connected(contiguous)
-    for key in district_dict:
-        # TODO
-        tmp = partition.graph.subgraph(district_dict[key])
-        if nx.is_connected(tmp) is False:
-            return False
-
-    return True
-
-
-def fast_connected(partition):
-    """
-    Checks that a given partition's components are connected using a simple breadth-first search.
-
-    :partition: Instance of Partition; contains connected components.
-    :returns: Boolean; Are the components of this partition connected?
-
-    """
-    assignment = partition.assignment
-
-    # Inverts the assignment dictionary so that lists of VTDs are keyed
-    # by their congressional districts.
-    districts = collections.defaultdict(set)
-
-    for vtd in assignment:
-        districts[assignment[vtd]].add(vtd)
-
-    # Generates a subgraph for each district and perform a BFS on it
-    # to check connectedness.
-    for district in districts:
-        adj = nx.to_dict_of_lists(partition.graph, districts[district])
-        if _bfs(adj) is False:
-            return False
-
-    return True
-
-
 def non_bool_fast_connected(partition):
     """
     Return the number of non-connected assignment subgraphs.
@@ -252,7 +184,7 @@ def non_bool_fast_connected(partition):
 no_more_disconnected = SelfConfiguringLowerBound(non_bool_fast_connected)
 
 
-def proposed_changes_still_contiguous(partition):
+def contiguous(partition):
     """
         Checks whether the districts that are altered by a proposed change
         (stored in partition.flips) remain contiguous under said changes.
@@ -280,10 +212,8 @@ def proposed_changes_still_contiguous(partition):
         districts[assignment[vtd]].add(vtd)
 
     for key in districts_of_interest:
-        adj = nx.to_dict_of_lists(partition.graph, districts[key])
-        if _bfs(adj) is False:
+        if not partition.graph.is_connected(districts[key])
             return False
-
     return True
 
 
