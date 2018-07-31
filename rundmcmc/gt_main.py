@@ -51,8 +51,6 @@ def main():
             data_cols=dataCols,
             data_source_type=datatype)
 
-    print([x for x in G.neighbors(list(G.nodes())[0])])
-
     add_data_to_graph(df, G, col_names=dataCols, id_col="GEOID10")
 
     assignment = dict([(x, G.graph.nodes[x]['CD']) for x in G.graph.nodes])#zip(G.nodes, G.node_properties('CD')))
@@ -77,7 +75,7 @@ def main():
 
     validator = Validator(default_constraints)
 
-    chain = MarkovChain(propose_random_flip, validator, always_accept, initial_state=p, total_steps=30)
+    chain = MarkovChain(propose_random_flip, validator, always_accept, initial_state=p, total_steps=100)
 
     print("MADE THE CHAIN")
     print(":) ")
