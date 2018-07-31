@@ -212,7 +212,7 @@ def contiguous(partition):
         districts[assignment[vtd]].add(vtd)
 
     for key in districts_of_interest:
-        if not partition.graph.is_connected(districts[key])
+        if not partition.graph.is_connected(districts[key]):
             return False
     return True
 

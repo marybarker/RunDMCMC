@@ -1,5 +1,5 @@
-#from rundmcmc.Graph import Graph
-from newGraph import Graph
+from rundmcmc.Graph import Graph
+#from newGraph import Graph
 
 from rundmcmc.partition import Partition
 from rundmcmc.updaters import (Tally, boundary_nodes, cut_edges,
@@ -15,8 +15,7 @@ from rundmcmc.run import pipe_to_table
 
 from validity import (L1_reciprocal_polsby_popper, UpperBound,
                                Validator, no_vanishing_districts,
-                               refuse_new_splits, contiguous, fast_connected,
-                               proposed_changes_still_contiguous,
+                               refuse_new_splits, contiguous,
                                within_percent_of_ideal_population)
 """
 from rundmcmc.validity import (L1_reciprocal_polsby_popper, UpperBound,
@@ -26,15 +25,14 @@ from rundmcmc.validity import (L1_reciprocal_polsby_popper, UpperBound,
                                within_percent_of_ideal_population)
 """
 
-from rundmcmc.proposals import \
-    propose_random_flip_no_loops as propose_random_flip
+from rundmcmc.proposals import propose_random_flip
 from rundmcmc.accept import always_accept
 from rundmcmc.chain import MarkovChain
 import geopandas as gp
 
 default_constraints = [#fast_connected,
-                       proposed_changes_still_contiguous,
-                       #contiguous,
+                       #proposed_changes_still_contiguous,
+                       contiguous,
                        no_vanishing_districts,
                        refuse_new_splits]
 
@@ -43,15 +41,17 @@ def main():
     dataCols = ['USH_DV08', 'USH_RV08']
 
     df = gp.read_file('./testData/mo_cleaned_vtds.shp')
+    datatype = "json"
 
     G = Graph('./testData/with_cd_plan.json',
-            geoid_col='GEOID10',
+            unique_id_col='GEOID10',
             area_col='ALAND10',
-            pop_col='POP100',
+            population_col='POP100',
             district_col='CD',
-            data_cols=dataCols)
+            data_cols=dataCols,
+            data_source_type=datatype)
 
-    print([x for x in G.graph.neighbors(list(G.graph.nodes())[0])])
+    print([x for x in G.neighbors(list(G.nodes())[0])])
 
     add_data_to_graph(df, G, col_names=dataCols, id_col="GEOID10")
 
@@ -71,9 +71,9 @@ def main():
     }
 
     G.convert()
-    print([x for x in G.graph.neighbors(list(G.graph.nodes())[0])])
+    print(len(G.edges))
 
-    p = Partition(G.graph, assignment, updaters)
+    p = Partition(G, assignment, updaters)
 
     validator = Validator(default_constraints)
 

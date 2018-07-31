@@ -160,25 +160,27 @@ class Graph:
                 self._converted = True
                 self.library = "graph_tool"
                 nodeNameType = type(list(self.nodes.keys())[0])
+                old_edge_keys = list(self.edges)
 
                 _nodedata = {
                     x: list(y) for x, y in list(self.graph.vertex_properties.items())
                 }
                 _nodename = map(nodeNameType,
                         list(self.graph.vertex_properties['_graphml_vertex_id']))
-                # number of nodes in graph
-                self._num_nodes = len(_nodedata)
 
                 # access a node's properties by:
                 #    self._nodes['propertyname']['nodename']
                 self.nodes = pd.DataFrame(_nodedata)
                 self.nodes['node_index'] = range(len(self.nodes))
 
+                # number of nodes in graph
+                self._num_nodes = len(self.nodes)
+
                 # acces a node's index by:
                 #    self._nodeindex[nodename]
                 self.nodenames = dict(enumerate(_nodename))
                 self.nodeindex = dict(zip(
-                    self.nodes['node_index'].tolist(), list(self.nodes.index)
+                    list(self.nodenames.values()), list(self.nodenames.keys())
                     ))
                 # make sure the node name in graphtool graph is of same datatype as nx graph
                 self.nodes['unique'] = self.nodes['_graphml_vertex_id'].astype(nodeNameType)
@@ -192,8 +194,15 @@ class Graph:
                 self.edges = pd.DataFrame(self.edges)
                 endpoints = [tuple(x) for x in
                         np.vectorize(self.nodenames.get)(np.asarray(self.graph.get_edges())[:,:2])]
-                self.edges['endpoints'] = endpoints
+                self.edges['endpoints'] = [tuple(sorted([str(x[0]), str(x[1])])) for x in endpoints]
                 self.edges = self.edges.set_index('endpoints')
+                """
+                # now add the edges to the dataframe with node order of each tuple reversed
+                _reversed_order = self.edges.copy(deep=True)
+                _reversed_order.index = map(lambda x: (x[1], x[0]), _reversed_order.index.tolist())
+                self.edges = self.edges.append(_reversed_order)
+                self.edges = self.edges.loc[old_edge_keys].to_dict('index')
+                """
                 self.edges = self.edges.to_dict('index')
                 self.visitor = VisitorExample()
 
@@ -214,10 +223,11 @@ class Graph:
                 tmp = self.graph
             else:
                 tmp = self.subgraph(nodes)
-            self.visitor.counter = 0
-            gta.bfs_search(tmp, tmp.vertex(next(tmp.vertices())), self.visitor)
-            if self.visitor.counter != len(nodes):
-                return False
+
+            visitor = self.visitor
+            visitor.counter=0
+            gta.bfs_search(tmp, tmp.get_vertices()[0], visitor=visitor)
+            return visitor.counter == len(tmp.get_vertices())
 
     def neighbors(self, node):
         """
@@ -237,9 +247,9 @@ class Graph:
             return self.graph.subgraph(nodes)
         else:
             vfilt = np.zeros(self._num_nodes, dtype=bool)
-            nodes = map(self.nodeindex.get, nodes)
-            vfilt[tuple(nodes)] = True
-            return GraphView(self.graph, vfilt=vfilt)
+            nodes = list(map(self.nodeindex.get, nodes))
+            vfilt[nodes] = True
+            return gta.GraphView(self.graph, vfilt=vfilt)
 
 
 if __name__ == "__main__":
