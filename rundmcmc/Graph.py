@@ -8,16 +8,6 @@ import os.path
 #import rundmcmc.networkx_graph_helpers as nx_graph
 import networkx_graph_helpers as nx_graph
 
-class VisitorExample(gta.BFSVisitor):
-
-    def __init__(self):
-        self.counter = 0
-
-    def discover_vertex(self, u):
-        self.counter += 1
-
-    def __len__(self):
-        return self.counter
 
 class Graph:
     """
@@ -204,7 +194,7 @@ class Graph:
                 self.edges = self.edges.loc[old_edge_keys].to_dict('index')
                 """
                 self.edges = self.edges.to_dict('index')
-                self.visitor = VisitorExample()
+                self.vp  = self.graph.new_vertex_property("bool", val=False)
 
                 return self.graph
             except:
@@ -223,11 +213,8 @@ class Graph:
                 tmp = self.graph
             else:
                 tmp = self.subgraph(nodes)
-
-            visitor = self.visitor
-            visitor.counter=0
-            gta.bfs_search(tmp, tmp.get_vertices()[0], visitor=visitor)
-            return visitor.counter == len(tmp.get_vertices())
+            comp = gta.label_out_component(tmp, next(tmp.vertices()))
+            return len(nodes) == sum(comp.a)
 
     def neighbors(self, node):
         """
@@ -246,10 +233,10 @@ class Graph:
         if not self._converted:
             return self.graph.subgraph(nodes)
         else:
-            vfilt = np.zeros(self._num_nodes, dtype=bool)
             nodes = list(map(self.nodeindex.get, nodes))
-            vfilt[nodes] = True
-            return gta.GraphView(self.graph, vfilt=vfilt)
+            self.vp.a = False
+            self.vp.a[nodes] = True
+            return gta.GraphView(self.graph, vfilt=self.vp)
 
 
 if __name__ == "__main__":

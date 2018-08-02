@@ -1,4 +1,5 @@
 from rundmcmc.Graph import Graph
+#from Graph import Graph
 #from newGraph import Graph
 
 from rundmcmc.partition import Partition
@@ -53,7 +54,8 @@ def main():
 
     add_data_to_graph(df, G, col_names=dataCols, id_col="GEOID10")
 
-    assignment = dict([(x, G.graph.nodes[x]['CD']) for x in G.graph.nodes])#zip(G.nodes, G.node_properties('CD')))
+    assignment = dict([(x, G.graph.nodes[x]['CD']) for x in G.graph.nodes])
+    #zip(G.nodes, G.node_properties('CD')))
 
     updaters = {
         **votes_updaters(['USH_DV08', 'USH_RV08']),
@@ -69,13 +71,12 @@ def main():
     }
 
     G.convert()
-    print(len(G.edges))
 
     p = Partition(G, assignment, updaters)
 
     validator = Validator(default_constraints)
 
-    chain = MarkovChain(propose_random_flip, validator, always_accept, initial_state=p, total_steps=100)
+    chain = MarkovChain(propose_random_flip, validator, always_accept, initial_state=p, total_steps=1000)
 
     print("MADE THE CHAIN")
     print(":) ")
@@ -84,7 +85,8 @@ def main():
     print(":-<")
 
     for step in chain:
-        print(chain.counter)
+        pass
+        #print(chain.counter)
     print("All done using ", default_constraints[0])
 
 if __name__ == "__main__":
